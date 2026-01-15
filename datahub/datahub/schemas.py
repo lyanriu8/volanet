@@ -3,13 +3,13 @@ from __future__ import annotations
 from enum import Enum 
 from datetime import datetime, timezone
 from typing import Literal, Optional
-
+from dataclasses import dataclass
 import pandas as pd
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 
 INTERVAL = Literal["1m", "5m", "15m", "1d", "1h"] # Can only be these strings
 
-class Interval(str, Enum): #has both type string and type enum
+class Interval(str, Enum):                        # has both type string and type enum
     """Canonical bar interval"""
     m1 = "1m"
     m5 = "5m"
@@ -17,7 +17,7 @@ class Interval(str, Enum): #has both type string and type enum
     d1 = "1d"
     h1 = "1h"
 
-class PriceField(str, Enum): #has both type string and type enum
+class PriceField(str, Enum):                     # has both type string and type enum
     """Canonical price field expected in OHLCV frames"""
     timestamp = "timestamp"
     open = "open"
@@ -93,14 +93,15 @@ class OHLCVWindowRequest(BaseModel):
         if v.tzinfo is None: 
             return v.replace(tzinfo=timezone.utc)
         return v.astimezone(timezone.utc)
-    
-class DatahubFrame(BaseModel):
+
+@dataclass
+class DatahubFrame():
     """Wrapper around OHLCV pandas DataFrame its spec 
-    -> avoids pydantic-serialize a DataFrame across HTTP 
+    -> avoids pydantic-serializing a DataFrame across HTTP 
     -> boundary between datahub and callers"""
     
     spec: OHLCVSpec
-    df: pd.DataFrame = Field(..., exclude=True)
+    df: pd.DataFrame
     
     def validate_frame(self) -> None:
         validate_ohlcv_df(self.df, self.spec)
