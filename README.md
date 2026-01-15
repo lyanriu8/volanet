@@ -1,2 +1,2 @@
 # VolaNet
-Full stack application using LSTM Neural Network to perform volatility analysis on the SMP500.
+Full stack application using LSTM Recurrent Neural Network to perform volatility analysis on the SMP500.
