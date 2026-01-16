@@ -49,7 +49,7 @@ class OHLCVSpec(BaseModel):
     def tz_non_empty(cls, v: str) -> str:
         if not v.strip():
             raise ValueError("tz must be non-empty")
-        return v;
+        return v
 
 class OHLCVQuery(BaseModel):
     """Parameters for requesting OHLCV data"""
@@ -76,7 +76,7 @@ class OHLCVWindowRequest(BaseModel):
     """Request for retrieving given amount of bars up to a certain date"""
     ticker: str
     interval: Interval = Interval.d1
-    bars: int = Field(default=..., description="Number of bars needed for feature windows")
+    bars: int = Field(default=..., ge=1, description="Number of bars needed for feature windows")
     as_of: Optional[datetime] = Field(default=None, description="Exclusive end time, defaults to now()")
     adjusted: bool = False
     
@@ -94,11 +94,13 @@ class OHLCVWindowRequest(BaseModel):
             return v.replace(tzinfo=timezone.utc)
         return v.astimezone(timezone.utc)
 
-@dataclass
+@dataclass(frozen=True)
 class DatahubFrame():
     """Wrapper around OHLCV pandas DataFrame its spec 
     -> avoids pydantic-serializing a DataFrame across HTTP 
-    -> boundary between datahub and callers"""
+    -> boundary between datahub and callers
+    -> not an API payload
+    """
     
     spec: OHLCVSpec
     df: pd.DataFrame

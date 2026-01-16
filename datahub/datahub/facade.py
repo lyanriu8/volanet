@@ -7,6 +7,8 @@ import pandas as pd
 
 from datahub.schemas import DatahubFrame, OHLCVQuery, OHLCVSpec, OHLCVWindowRequest, Interval, validate_ohlcv_df
 
+from .clients.yahoo_client import get_ohlcv, YahooRequest
+from .pipeline.normalize import normalize_ohlcv
 
 # ----- Public API ------
 
@@ -21,9 +23,7 @@ def get_window(r: OHLCVWindowRequest) -> DatahubFrame:
     start = _get_start(end=end, interval=interval, bars=bars)
     
     df = _get_df(ticker, interval, start, end, None, adjusted)
-    
-    df = _normalize(df) #change this later
-    
+        
     # Keep only the last N bars (after normalization)
     df = df.tail(bars).reset_index(drop=True)
     
@@ -43,9 +43,7 @@ def get_history(q: OHLCVQuery) -> DatahubFrame:
     start = q.start
     
     df = _get_df(ticker=ticker, interval=interval, start=start, end=end, limit=None, adjusted=adjusted)
-    
-    df = _normalize(df) #change this later
-    
+        
     spec = OHLCVSpec(interval=interval, adjusted=adjusted, source="not yet :)")
     
     validate_ohlcv_df(df, spec)
@@ -63,8 +61,15 @@ def _get_df(ticker: str, interval: Interval, start: Optional[datetime], end: Opt
     Must return a DataFrame with at least timestamp/open/high/low/close/volume
     (column names can be vendor-ish; normalization will fix).
     """
+    if end is None:
+        end = datetime.now(timezone.utc)
     
-    raise NotImplementedError("Wire to first client")
+    if start is None: 
+        start = end - timedelta(days=365) # sets default to 1 year ago
+
+    df = get_ohlcv(YahooRequest(ticker, interval, start, end))
+    df = normalize_ohlcv(df)
+    return df
 
 def _get_start(*, end: datetime, interval: Interval, bars: int) -> datetime:
     """
@@ -92,6 +97,9 @@ def _get_start(*, end: datetime, interval: Interval, bars: int) -> datetime:
     # fallback
     return end - timedelta(days=bars * 2)
 
-def _normalize(df: pd.DataFrame) -> pd.DataFrame:
-    """Stub. Actual logic should be in pipline"""
-    return df
+# Test
+if __name__ == "__main__":
+    
+    dh = get_history(OHLCVQuery(ticker="AAPL", interval=Interval.d1, start=datetime(2024, 12, 1, tzinfo=timezone.utc), end=datetime(2025, 1, 1, tzinfo=timezone.utc)))
+    
+    print(dh.df.info())
