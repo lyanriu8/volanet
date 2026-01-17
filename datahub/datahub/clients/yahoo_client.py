@@ -14,7 +14,7 @@ class YahooRequest:
     interval: Interval
     start: datetime #date is in utc -> must conver to NY
     end: datetime
-    
+
 @dataclass
 class YahooBulkRequest:
     """Client bulk tickers request to yFinance"""
@@ -34,7 +34,7 @@ def get_ohlcv(r: YahooRequest) -> pd.DataFrame:
     r.start = to_yahoo_time(r.start)
     r.end = to_yahoo_time(r.end)
     
-    df = yf.Ticker(r.ticker).history(start=r.start, end=r.end, interval=r.interval, auto_adjust=False, actions=False)
+    df = yf.Ticker(r.ticker).history(start=r.start, end=r.end, interval=r.interval, auto_adjust=True, actions=False)
     
     if df is None:
         return pd.DataFrame()
