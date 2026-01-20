@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Literal ,Optional , Sequence
 
 import pandas as pd 
+import numpy as np
 from pydantic import BaseModel, Field, model_validator
 
 Interval = Literal["1d", "1h", "30m", "15m", "5m", "1m"]
@@ -19,11 +20,11 @@ class FeatureConfig(BaseModel):
     
     feature_set: str = Field(default="basic_v1")
     windows: Sequence[int] = Field(default=(5, 20, 60))
-    use_log_returns: bool = True
-    include_gaps: bool = True
+    use_log_returns: bool = True # use log to comptute returns
+    include_gaps: bool = True # compares how current open comapres to day befores close
     include_volume: bool = True
     include_ranges: bool = True
-    drop_na_roww: bool = True # -> drop rows until all rolling windows are all valid
+    drop_na_row: bool = True # drop rows until all rolling windows are all valid
     
     
 class LabelConfig(BaseModel):
@@ -58,7 +59,7 @@ class DatasetConfig(BaseModel):
             raise ValueError("split must sum to 1.0")
         return self
 
-class BuildSpec(BaseModel):
+class BuildConfig(BaseModel):
     """Full spec to build dataset from canonical OHLCV"""
     ticker: str
     interval: Interval = "1d"
@@ -73,26 +74,42 @@ class BuildSpec(BaseModel):
 @dataclass(frozen=True)
 class FeatureFrame:
     """"A feature dataframe aligned with timestamps so that model knows where cols with 
-    features are"""
+    features are
+    -> Output of feature engineering"""
     
     df: pd.DataFrame
-    feature_cols = list[str]
+    feature_cols: list[str]
     
-dataclass(frozen=True)
+@dataclass(frozen=True)
 class SupervisedFeatureFrame:
-    """A feature + label dataframe aligned with timestamps so that the model knows where features + labels are"""
+    """A feature + label dataframe aligned with timestamps so that the model knows where features + labels are
+    -> Output of labeling"""
     
     df: pd.DataFrame
     feature_cols: list[str]
     label_cols: str
 
+@dataclass(frozen=True)
+class SequenceDataset:
+    """A sequence dataset for LSTM-style models."""
+    X: np.ndarray                 # (N, lookback, n_features)
+    y: Optional[np.ndarray]       # (N,) for training; None for inference
+    end_timestamps: np.ndarray    # (N,) timestamps aligned to each sample (sequence end)
 
+
+@dataclass(frozen=True)
+class SplitDatasets:
+    train: SequenceDataset
+    val: SequenceDataset
+    test: SequenceDataset
+    manifest: DatasetManifest
+    label_col: str
 
 
 # --------- Inference Request ----------
 
-class InferenceReqeust(BaseModel):
-    """Inference request made to the model from API or CLT side"""
+class InferenceRequest(BaseModel):
+    """Inference request made to the model from API or CLI side"""
     
     ticker: str
     interval: Interval = "1d"
@@ -173,4 +190,3 @@ class ModelMannifest(BaseModel):
     scalar_path: str
     
     weights_path: str
-    
