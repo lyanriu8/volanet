@@ -30,17 +30,12 @@ def build_labels(df: pd.DataFrame, cfg: LabelConfig) -> pd.Series:
 
     if "log_return" not in df.columns:
         raise ValueError("build_labels requires 'log_return' column in dataframe.")
-
-    horizon = int(cfg.horizon)
-    if horizon <= 0:
-        raise ValueError("horizon must be > 0")
-
+    
     # realized volatility over future window
-    # label at time t uses returns from t+1 ... t+horizon
     y = (
         df["log_return"]
         .shift(-1)
-        .rolling(window=horizon)
+        .rolling(window=cfg.horizon)
         .apply(lambda x: float(np.sqrt(np.sum(np.square(x)))), raw=True)
     )
 
@@ -48,7 +43,7 @@ def build_labels(df: pd.DataFrame, cfg: LabelConfig) -> pd.Series:
 
     # optional annualization (kept explicit, not mixed with target)
     if cfg.annualize:
-        ann = np.sqrt(cfg.trading_days / horizon)
+        ann = np.sqrt(cfg.trading_days / cfg.horizon)
         y = y * ann
 
     return y

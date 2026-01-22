@@ -7,8 +7,8 @@ import pandas as pd
 
 from datahub.schemas import DatahubFrame, OHLCVQuery, OHLCVSpec, OHLCVWindowRequest, Interval, validate_ohlcv_df
 
-from .clients.yahoo_client import get_ohlcv, YahooRequest
-from .pipeline.normalize import normalize_ohlcv
+from datahub.clients.yahoo_client import get_ohlcv, YahooRequest
+from datahub.pipeline.normalize import normalize_ohlcv
 
 # ----- Public API ------
 

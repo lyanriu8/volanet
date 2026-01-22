@@ -1,7 +1,7 @@
 import yfinance as yf
 import pandas as pd
 from dataclasses import dataclass
-from ..schemas import Interval, PriceField
+from datahub.schemas import Interval
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 

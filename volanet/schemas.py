@@ -6,7 +6,7 @@ from typing import Literal ,Optional , Sequence
 
 import pandas as pd 
 import numpy as np
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, ConfigDict
 
 Interval = Literal["1d", "1h", "30m", "15m", "5m", "1m"]
 
@@ -110,6 +110,7 @@ class SplitDatasets:
 
 class InferenceRequest(BaseModel):
     """Inference request made to the model from API or CLI side"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     
     ticker: str
     interval: Interval = "1d"
