@@ -161,6 +161,10 @@ def build_training_splits(
     canonical_ohlcv: pd.DataFrame,
     cfg: BuildConfig,
 ) -> SplitDatasets:
+    """
+    _build_supervised_frame -> creates a single dataframe that contains feature cols and label cols
+    
+    """
     sf = _build_supervised_frame(canonical_ohlcv, cfg)
     label_col = sf.label_cols
 

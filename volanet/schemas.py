@@ -19,7 +19,7 @@ class FeatureConfig(BaseModel):
     """Determines features what to build from canonical OHLCV from datahub"""
     
     feature_set: str = Field(default="basic_v1")
-    windows: Sequence[int] = Field(default=(5, 20, 60))
+    windows: Sequence[int] = Field(default=(5, 20, 60)) # build these windows
     use_log_returns: bool = True # use log to comptute returns
     include_gaps: bool = True # compares how current open comapres to day befores close
     include_volume: bool = True
@@ -92,7 +92,7 @@ class SupervisedFeatureFrame:
 @dataclass(frozen=True)
 class SequenceDataset:
     """A sequence dataset for LSTM-style models."""
-    X: np.ndarray                 # (N, lookback, n_features)
+    X: np.ndarray                 # (N, lookback, n_features) ---> 3d array
     y: Optional[np.ndarray]       # (N,) for training; None for inference
     end_timestamps: np.ndarray    # (N,) timestamps aligned to each sample (sequence end)
 
