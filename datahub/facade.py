@@ -9,6 +9,9 @@ from datahub.schemas import DatahubFrame, OHLCVQuery, OHLCVSpec, OHLCVWindowRequ
 
 from datahub.clients.yahoo_client import get_ohlcv, YahooRequest
 from datahub.pipeline.normalize import normalize_ohlcv
+from datahub.store.parquet_store import ParquetStoreConfig, load_ohlcv, upsert_ohlcv
+_STORE = ParquetStoreConfig()  
+
 
 # ----- Public API ------
 
@@ -61,6 +64,10 @@ def _get_df(ticker: str, interval: Interval, start: Optional[datetime], end: Opt
     Must return a DataFrame with at least timestamp/open/high/low/close/volume
     (column names can be vendor-ish; normalization will fix).
     """
+    cached = load_ohlcv(_STORE, ticker=ticker, interval=str(interval), adjusted=adjusted, start=start, end=end)
+    if cached is not None and len(cached) > 0:
+        return cached
+
     if end is None:
         end = datetime.now(timezone.utc)
     
@@ -102,4 +109,4 @@ if __name__ == "__main__":
     
     dh = get_history(OHLCVQuery(ticker="AAPL", interval=Interval.d1, start=datetime(2024, 12, 1, tzinfo=timezone.utc), end=datetime(2025, 1, 1, tzinfo=timezone.utc)))
     
-    print(dh.df.info())
+    print(dh.df)
