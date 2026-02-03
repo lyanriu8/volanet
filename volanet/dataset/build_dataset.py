@@ -218,3 +218,5 @@ def build_inference_dataset(req: InferenceRequest) -> SequenceDataset:
     end_ts = np.array([pd.to_datetime(df_last["timestamp"].iloc[-1]).to_numpy()])
 
     return SequenceDataset(X=X, y=None, end_timestamps=end_ts)
+
+    
